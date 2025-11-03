@@ -1,0 +1,5 @@
+{
+  "name": "AI Image Upscaler",
+  "description": "Upscale and enhance your images to 2x and 4x their original resolution using the power of Gemini AI. A modern, fast, and easy-to-use tool to bring your photos to life, inspired by Upscayl.",
+  "requestFramePermissions": []
+}
