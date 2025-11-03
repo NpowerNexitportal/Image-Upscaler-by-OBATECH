@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Modality, GenerateContentResponse } from "@google/genai";
 import { UpscaleFactor } from '../types';
 
@@ -18,7 +17,8 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 
 export const upscaleImage = async (file: File, scale: UpscaleFactor): Promise<string> => {
-  const API_KEY = process.env.API_KEY;
+  // Safely access the API key to prevent "process is not defined" error in some browser environments
+  const API_KEY = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
 
   if (!API_KEY) {
     throw new Error("API_KEY environment variable not set. Please ensure it's configured correctly.");

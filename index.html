@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI Image Upscaler</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Add Babel Standalone for in-browser JSX/TSX transpilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
       /* Custom scrollbar for a more modern look */
       ::-webkit-scrollbar {
@@ -36,6 +37,7 @@
 </head>
   <body class="bg-gray-900 text-gray-100 antialiased">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <!-- Update script type to text/babel to be processed by Babel Standalone -->
+    <script type="text/babel" data-type="module" src="/index.tsx"></script>
   </body>
 </html>
