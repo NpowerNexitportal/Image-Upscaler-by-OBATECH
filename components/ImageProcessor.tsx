@@ -1,11 +1,10 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { UpscaleFactor } from '../types';
-import { upscaleImage } from '../services/geminiService';
-import { UploadIcon } from './icons/UploadIcon';
-import { DownloadIcon } from './icons/DownloadIcon';
-import { Spinner } from './Spinner';
-import { ErrorIcon } from './icons/ErrorIcon';
+import { UpscaleFactor } from '../types.ts';
+import { upscaleImage } from '../services/geminiService.ts';
+import { UploadIcon } from './icons/UploadIcon.tsx';
+import { DownloadIcon } from './icons/DownloadIcon.tsx';
+import { Spinner } from './Spinner.tsx';
+import { ErrorIcon } from './icons/ErrorIcon.tsx';
 
 const ImageProcessor: React.FC = () => {
   const [originalFile, setOriginalFile] = useState<File | null>(null);

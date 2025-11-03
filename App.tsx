@@ -1,8 +1,7 @@
-
 import React from 'react';
-import Header from './components/Header';
-import Footer from './components/Footer';
-import ImageProcessor from './components/ImageProcessor';
+import Header from './components/Header.tsx';
+import Footer from './components/Footer.tsx';
+import ImageProcessor from './components/ImageProcessor.tsx';
 
 const App: React.FC = () => {
   return (
