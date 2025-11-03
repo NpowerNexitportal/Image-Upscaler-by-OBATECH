@@ -14,7 +14,10 @@ const ImageProcessor: React.FC = () => {
   const [scaleFactor, setScaleFactor] = useState<UpscaleFactor>(UpscaleFactor.TWO_X);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const acceptedMimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
   useEffect(() => {
     // Clean up the object URL to avoid memory leaks
@@ -25,14 +28,22 @@ const ImageProcessor: React.FC = () => {
     };
   }, [previewUrl]);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
+  const processFile = (file: File) => {
+    if (file && acceptedMimeTypes.includes(file.type)) {
       setOriginalFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       setUpscaledImageUrl(null);
       setError(null);
+    } else {
+      setError(`Invalid file type. Please upload a PNG, JPEG, or WEBP image.`);
+    }
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      processFile(file);
     }
   };
 
@@ -68,11 +79,37 @@ const ImageProcessor: React.FC = () => {
     }
   }, []);
 
+  const handleDragOver = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  }, []);
+
   const renderInitialView = () => (
     <div className="w-full max-w-2xl text-center">
       <div 
-        className="border-2 border-dashed border-gray-600 rounded-2xl p-12 hover:border-pink-500 transition-all duration-300 cursor-pointer bg-gray-800/20"
+        className={`border-2 border-dashed rounded-2xl p-12 transition-all duration-300 cursor-pointer bg-gray-800/20 ${
+            isDragging 
+            ? 'border-pink-500 border-solid scale-105 shadow-2xl shadow-pink-500/20' 
+            : 'border-gray-600 hover:border-pink-500'
+        }`}
         onClick={triggerFileSelect}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         <UploadIcon className="mx-auto h-16 w-16 text-gray-500 mb-4" />
         <h2 className="text-xl font-semibold text-white">Select Image</h2>
@@ -83,8 +120,14 @@ const ImageProcessor: React.FC = () => {
         ref={fileInputRef}
         onChange={handleFileChange}
         className="hidden"
-        accept="image/png, image/jpeg, image/webp"
+        accept={acceptedMimeTypes.join(',')}
       />
+      {error && !originalFile && (
+        <div className="mt-4 p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-start space-x-3 max-w-md mx-auto">
+          <ErrorIcon className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <p className="text-red-300 text-sm text-left">{error}</p>
+        </div>
+      )}
     </div>
   );
 
