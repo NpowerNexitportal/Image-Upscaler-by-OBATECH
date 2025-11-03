@@ -2,14 +2,6 @@
 import { GoogleGenAI, Modality, GenerateContentResponse } from "@google/genai";
 import { UpscaleFactor } from '../types';
 
-const API_KEY = process.env.API_KEY;
-
-if (!API_KEY) {
-  throw new Error("API_KEY environment variable not set.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
-
 const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -26,6 +18,14 @@ const fileToBase64 = (file: File): Promise<string> => {
 
 
 export const upscaleImage = async (file: File, scale: UpscaleFactor): Promise<string> => {
+  const API_KEY = process.env.API_KEY;
+
+  if (!API_KEY) {
+    throw new Error("API_KEY environment variable not set. Please ensure it's configured correctly.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
   try {
     const base64Data = await fileToBase64(file);
     const prompt = `Upscale this image by a factor of ${scale}. Enhance the details, improve sharpness, and increase the resolution while maintaining the original artistic style. Do not add new elements or change the composition. The output should be a high-quality, larger version of the original image. Remove any compression artifacts or noise.`;
