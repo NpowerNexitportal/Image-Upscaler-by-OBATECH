@@ -1,9 +1,11 @@
-import React, { useState, useCallback, useRef } from 'react';
+
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { UpscaleFactor } from '../types';
 import { upscaleImage } from '../services/geminiService';
 import { UploadIcon } from './icons/UploadIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
 import { Spinner } from './Spinner';
+import { ErrorIcon } from './icons/ErrorIcon';
 
 const ImageProcessor: React.FC = () => {
   const [originalFile, setOriginalFile] = useState<File | null>(null);
@@ -13,6 +15,15 @@ const ImageProcessor: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Clean up the object URL to avoid memory leaks
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -46,6 +57,17 @@ const ImageProcessor: React.FC = () => {
     }
   }, [originalFile, scaleFactor]);
 
+  const handleReset = useCallback(() => {
+    setOriginalFile(null);
+    setPreviewUrl(null);
+    setUpscaledImageUrl(null);
+    setError(null);
+    setIsLoading(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, []);
+
   const renderInitialView = () => (
     <div className="w-full max-w-2xl text-center">
       <div 
@@ -69,44 +91,61 @@ const ImageProcessor: React.FC = () => {
   const renderProcessingView = () => (
     <div className="w-full flex flex-col lg:flex-row gap-8 bg-gray-800/30 rounded-2xl p-6 shadow-2xl border border-gray-700/50">
       {/* Controls Panel */}
-      <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col space-y-6">
-        <h2 className="text-2xl font-bold border-b border-gray-700 pb-3">Upscale Options</h2>
-        <div>
-          <label className="block text-sm font-medium text-gray-300 mb-2">Upscale To</label>
-          <div className="grid grid-cols-2 gap-2">
-            <button
-              onClick={() => setScaleFactor(UpscaleFactor.TWO_X)}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${scaleFactor === UpscaleFactor.TWO_X ? 'bg-pink-600 text-white shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
-            >
-              2X Upscale
-            </button>
-            <button
-              onClick={() => setScaleFactor(UpscaleFactor.FOUR_X)}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${scaleFactor === UpscaleFactor.FOUR_X ? 'bg-pink-600 text-white shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
-            >
-              4X Upscale
-            </button>
+      <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-col">
+        <h2 className="text-2xl font-bold border-b border-gray-700 pb-3 mb-6">Upscale Options</h2>
+        <div className="flex-grow space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Upscale To</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setScaleFactor(UpscaleFactor.TWO_X)}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${scaleFactor === UpscaleFactor.TWO_X ? 'bg-pink-600 text-white shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
+              >
+                2X Upscale
+              </button>
+              <button
+                onClick={() => setScaleFactor(UpscaleFactor.FOUR_X)}
+                className={`px-4 py-2 text-sm font-semibold rounded-lg transition-all ${scaleFactor === UpscaleFactor.FOUR_X ? 'bg-pink-600 text-white shadow-lg' : 'bg-gray-700 hover:bg-gray-600'}`}
+              >
+                4X Upscale
+              </button>
+            </div>
           </div>
+          <button
+            onClick={handleUpscale}
+            disabled={isLoading}
+            className="w-full py-3 px-4 bg-gradient-to-r from-pink-600 to-violet-600 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          >
+            {isLoading && <Spinner />}
+            <span>{isLoading ? 'Upscaling...' : 'Upscale'}</span>
+          </button>
+          
+          {error && (
+            <div className="p-3 bg-red-900/30 border border-red-700/50 rounded-lg flex items-start space-x-3">
+              <ErrorIcon className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <p className="text-red-300 text-sm">{error}</p>
+            </div>
+          )}
+
+          {upscaledImageUrl && !isLoading && (
+              <a
+                  href={upscaledImageUrl}
+                  download={`upscaled_${originalFile?.name || 'image.png'}`}
+                  className="w-full py-3 px-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 text-center"
+              >
+                  <DownloadIcon className="h-5 w-5" />
+                  <span>Download</span>
+              </a>
+          )}
         </div>
-        <button
-          onClick={handleUpscale}
-          disabled={isLoading}
-          className="w-full py-3 px-4 bg-gradient-to-r from-pink-600 to-violet-600 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
-        >
-          {isLoading && <Spinner />}
-          <span>{isLoading ? 'Upscaling...' : 'Upscale'}</span>
-        </button>
-        {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
-        {upscaledImageUrl && !isLoading && (
-            <a
-                href={upscaledImageUrl}
-                download={`upscaled_${originalFile?.name || 'image.png'}`}
-                className="w-full py-3 px-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center space-x-2 text-center"
+        <div className="mt-6 pt-6 border-t border-gray-700/50">
+            <button
+                onClick={handleReset}
+                className="w-full py-3 px-4 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center space-x-2 text-center"
             >
-                <DownloadIcon className="h-5 w-5" />
-                <span>Download</span>
-            </a>
-        )}
+                <span>Start Over</span>
+            </button>
+        </div>
       </div>
 
       {/* Image Preview Area */}
